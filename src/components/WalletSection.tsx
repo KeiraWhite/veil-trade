@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Wallet, Shield, Zap, Plus } from "lucide-react";
+import { Wallet, Gamepad2, Zap, Plus, Lock, Star } from "lucide-react";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount } from 'wagmi';
 
@@ -97,7 +97,7 @@ const WalletSection = () => {
             <Card className="card-encrypted">
               <div className="space-y-6">
                 <div className="flex items-center justify-center w-16 h-16 mx-auto bg-secondary/20 rounded-full">
-                  <Plus className="h-8 w-8 text-secondary" />
+                  <Gamepad2 className="h-8 w-8 text-secondary" />
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold mb-2">List Items</h3>
@@ -106,7 +106,7 @@ const WalletSection = () => {
                   </p>
                 </div>
                 <Button className="btn-secondary w-full" onClick={() => window.location.href = '/list-items'}>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Gamepad2 className="h-4 w-4 mr-2" />
                   List Your Items
                 </Button>
               </div>
@@ -116,7 +116,7 @@ const WalletSection = () => {
           <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-8">
             <div className="flex items-center justify-center space-x-8">
               <div className="flex items-center space-x-3">
-                <Shield className="h-6 w-6 text-primary" />
+                <Lock className="h-6 w-6 text-primary" />
                 <span className="font-semibold">256-bit Encryption</span>
               </div>
               <div className="flex items-center space-x-3">
@@ -124,8 +124,8 @@ const WalletSection = () => {
                 <span className="font-semibold">Instant Settlement</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Wallet className="h-6 w-6 text-primary-glow" />
-                <span className="font-semibold">Multi-Wallet Support</span>
+                <Star className="h-6 w-6 text-primary-glow" />
+                <span className="font-semibold">Premium Assets</span>
               </div>
             </div>
           </div>
