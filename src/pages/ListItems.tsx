@@ -5,9 +5,185 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Upload, Lock, Zap, Eye } from "lucide-react";
+import { Plus, Upload, Lock, Zap, Eye, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { useAccount } from 'wagmi';
+import { useVeilTrade } from '@/hooks/useVeilTrade';
+import { useState, useRef } from 'react';
+import { toast } from 'sonner';
+import { encryptAssetData, rarityToNumber } from '@/lib/fhe';
+
+interface ListingForm {
+  itemName: string;
+  game: string;
+  rarity: string;
+  price: string;
+  description: string;
+  imageUrl: string;
+  isEncrypted: boolean;
+}
 
 const ListItems = () => {
+  const { address } = useAccount();
+  const { createAssetListing, isProcessing } = useVeilTrade();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [formData, setFormData] = useState<ListingForm>({
+    itemName: '',
+    game: '',
+    rarity: '',
+    price: '',
+    description: '',
+    imageUrl: '',
+    isEncrypted: true,
+  });
+  
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleInputChange = (field: keyof ListingForm, value: string | boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload a valid image file');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      toast.error('Image size must be less than 10MB');
+      return;
+    }
+
+    setIsUploading(true);
+    
+    try {
+      // In a real implementation, upload to IPFS or similar decentralized storage
+      const mockImageUrl = await simulateImageUpload(file);
+      setUploadedImage(mockImageUrl);
+      handleInputChange('imageUrl', mockImageUrl);
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const simulateImageUpload = async (file: File): Promise<string> => {
+    // Simulate upload delay
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // In real implementation, upload to IPFS and return hash
+    return `ipfs://mock_hash_${Date.now()}`;
+  };
+
+  const validateForm = (): boolean => {
+    if (!address) {
+      toast.error('Please connect your wallet first');
+      return false;
+    }
+
+    if (!formData.itemName.trim()) {
+      toast.error('Item name is required');
+      return false;
+    }
+
+    if (!formData.game.trim()) {
+      toast.error('Game name is required');
+      return false;
+    }
+
+    if (!formData.rarity) {
+      toast.error('Please select a rarity');
+      return false;
+    }
+
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      toast.error('Please enter a valid price');
+      return false;
+    }
+
+    if (!formData.description.trim()) {
+      toast.error('Description is required');
+      return false;
+    }
+
+    if (!formData.imageUrl) {
+      toast.error('Please upload an image');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setSubmitStatus('idle');
+      
+      // Encrypt asset data using FHE
+      const priceValue = parseFloat(formData.price);
+      const rarityValue = rarityToNumber(formData.rarity);
+      const levelValue = Math.floor(Math.random() * 100) + 1; // Mock level
+
+      const encryptedData = encryptAssetData({
+        price: priceValue,
+        rarity: rarityValue,
+        level: levelValue,
+        metadata: JSON.stringify({
+          name: formData.itemName,
+          game: formData.game,
+          description: formData.description,
+          imageUrl: formData.imageUrl,
+          timestamp: Date.now()
+        })
+      });
+
+      // Create asset listing
+      await createAssetListing(
+        formData.itemName,
+        formData.game,
+        formData.rarity,
+        formData.price,
+        formData.description,
+        formData.imageUrl
+      );
+
+      setSubmitStatus('success');
+      
+      // Reset form after successful submission
+      setTimeout(() => {
+        setFormData({
+          itemName: '',
+          game: '',
+          rarity: '',
+          price: '',
+          description: '',
+          imageUrl: '',
+          isEncrypted: true,
+        });
+        setUploadedImage(null);
+        setSubmitStatus('idle');
+      }, 3000);
+
+    } catch (error) {
+      console.error('Listing creation failed:', error);
+      setSubmitStatus('error');
+      toast.error('Failed to create listing. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -31,56 +207,113 @@ const ListItems = () => {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="item-name">Item Name</Label>
-                      <Input id="item-name" placeholder="Enter item name" />
+                      <Input 
+                        id="item-name" 
+                        placeholder="Enter item name"
+                        value={formData.itemName}
+                        onChange={(e) => handleInputChange('itemName', e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="game">Game</Label>
-                      <Input id="game" placeholder="Game title" />
+                      <Input 
+                        id="game" 
+                        placeholder="Game title"
+                        value={formData.game}
+                        onChange={(e) => handleInputChange('game', e.target.value)}
+                      />
                     </div>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="rarity">Rarity</Label>
-                      <Select>
+                      <Select value={formData.rarity} onValueChange={(value) => handleInputChange('rarity', value)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select rarity" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="common">Common</SelectItem>
-                          <SelectItem value="rare">Rare</SelectItem>
-                          <SelectItem value="epic">Epic</SelectItem>
-                          <SelectItem value="legendary">Legendary</SelectItem>
+                          <SelectItem value="Common">Common</SelectItem>
+                          <SelectItem value="Rare">Rare</SelectItem>
+                          <SelectItem value="Epic">Epic</SelectItem>
+                          <SelectItem value="Legendary">Legendary</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="price">Price (ETH)</Label>
-                      <Input id="price" placeholder="0.00" type="number" step="0.01" />
+                      <Input 
+                        id="price" 
+                        placeholder="0.00" 
+                        type="number" 
+                        step="0.01"
+                        value={formData.price}
+                        onChange={(e) => handleInputChange('price', e.target.value)}
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" placeholder="Describe your item..." rows={4} />
+                    <Textarea 
+                      id="description" 
+                      placeholder="Describe your item..."
+                      rows={4}
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                    />
                   </div>
 
                   <div className="space-y-4">
                     <Label>Item Image</Label>
-                    <div className="border-2 border-dashed border-border/50 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                      <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                      <div className="space-y-2">
-                        <p className="font-medium">Upload your item image</p>
-                        <p className="text-sm text-muted-foreground">
-                          PNG, JPG up to 10MB. Your image will be encrypted until sale.
-                        </p>
-                      </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <div 
+                      className="border-2 border-dashed border-border/50 rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {uploadedImage ? (
+                        <div className="space-y-2">
+                          <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                          <p className="font-medium text-green-600">Image uploaded successfully!</p>
+                          <p className="text-sm text-muted-foreground">
+                            {uploadedImage}
+                          </p>
+                        </div>
+                      ) : isUploading ? (
+                        <div className="space-y-2">
+                          <Loader2 className="h-12 w-12 mx-auto mb-4 text-primary animate-spin" />
+                          <p className="font-medium">Uploading image...</p>
+                          <p className="text-sm text-muted-foreground">
+                            Please wait while your image is being processed
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                          <p className="font-medium">Upload your item image</p>
+                          <p className="text-sm text-muted-foreground">
+                            PNG, JPG up to 10MB. Your image will be encrypted until sale.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="encrypted" className="rounded" defaultChecked />
+                      <input 
+                        type="checkbox" 
+                        id="encrypted" 
+                        className="rounded" 
+                        checked={formData.isEncrypted}
+                        onChange={(e) => handleInputChange('isEncrypted', e.target.checked)}
+                      />
                       <Label htmlFor="encrypted" className="flex items-center space-x-2">
                         <Lock className="h-4 w-4 text-primary" />
                         <span>Enable encryption (recommended)</span>
@@ -91,9 +324,25 @@ const ListItems = () => {
                     </p>
                   </div>
 
-                  <Button className="btn-hero w-full">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Encrypted Listing
+                  <Button 
+                    className="btn-hero w-full"
+                    onClick={handleSubmit}
+                    disabled={isProcessing || !address}
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : submitStatus === 'success' ? (
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                    ) : submitStatus === 'error' ? (
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Plus className="h-4 w-4 mr-2" />
+                    )}
+                    {isProcessing ? 'Creating Listing...' : 
+                     submitStatus === 'success' ? 'Listing Created!' :
+                     submitStatus === 'error' ? 'Failed - Try Again' :
+                     !address ? 'Connect Wallet First' :
+                     'Create Encrypted Listing'}
                   </Button>
                 </div>
               </Card>

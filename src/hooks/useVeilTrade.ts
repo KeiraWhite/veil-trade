@@ -124,30 +124,39 @@ export const useVeilTrade = () => {
     try {
       setIsProcessing(true);
 
-      // Encrypt listing data
+      // Encrypt listing data using FHE
       const priceValue = parseFloat(price.replace(' ETH', ''));
-      const rarityValue = rarity === 'Legendary' ? 4 : 
-                         rarity === 'Epic' ? 3 :
-                         rarity === 'Rare' ? 2 : 1;
+      const rarityValue = rarityToNumber(rarity);
       const levelValue = Math.floor(Math.random() * 100) + 1;
 
-      const encryptedPrice = encryptValue(priceValue);
-      const encryptedRarity = encryptValue(rarityValue);
-      const encryptedLevel = encryptValue(levelValue);
+      const encryptedData = encryptAssetData({
+        price: priceValue,
+        rarity: rarityValue,
+        level: levelValue,
+        metadata: JSON.stringify({
+          name,
+          game,
+          description,
+          imageUrl,
+          timestamp: Date.now()
+        })
+      });
 
       // In real implementation, call the smart contract
-      await simulateAssetListing({
+      const txHash = await simulateAssetListing({
         name,
         game,
         description,
         imageUrl,
-        encryptedPrice,
-        encryptedRarity,
-        encryptedLevel,
+        encryptedPrice: encryptedData.encryptedPrice,
+        encryptedRarity: encryptedData.encryptedRarity,
+        encryptedLevel: encryptedData.encryptedLevel,
+        metadata: encryptedData.metadata,
+        proofs: encryptedData.proofs,
         owner: address,
       });
 
-      toast.success('Asset listed successfully!');
+      toast.success(`Asset listed successfully! Transaction: ${txHash.slice(0, 10)}...`);
       
     } catch (err) {
       console.error('Listing failed:', err);
@@ -157,10 +166,13 @@ export const useVeilTrade = () => {
     }
   };
 
-  const simulateAssetListing = async (data: any) => {
+  const simulateAssetListing = async (data: any): Promise<string> => {
     // Simulate blockchain transaction
     await new Promise(resolve => setTimeout(resolve, 1500));
     console.log('Asset listing data:', data);
+    
+    // Return mock transaction hash
+    return generateTransactionHash();
   };
 
   return {
