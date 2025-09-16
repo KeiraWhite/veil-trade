@@ -1,6 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Lock, Eye, Star, Zap } from "lucide-react";
+import { Lock, Eye, Star, Zap, Loader2 } from "lucide-react";
+import { useAccount } from 'wagmi';
+import { useVeilTrade, GameAsset } from '@/hooks/useVeilTrade';
+import { TransactionStatus } from '@/components/TransactionStatus';
 import encryptedCrate from "@/assets/encrypted-crate.jpg";
+import { toast } from 'sonner';
+import { useState } from 'react';
 
 interface GameItem {
   id: string;
@@ -9,6 +14,7 @@ interface GameItem {
   rarity: "Common" | "Rare" | "Epic" | "Legendary";
   price: string;
   isEncrypted: boolean;
+  owner: string;
 }
 
 const gameItems: GameItem[] = [
@@ -19,6 +25,7 @@ const gameItems: GameItem[] = [
     rarity: "Legendary",
     price: "0.5 ETH",
     isEncrypted: true,
+    owner: "0x1234567890123456789012345678901234567890",
   },
   {
     id: "2", 
@@ -27,6 +34,7 @@ const gameItems: GameItem[] = [
     rarity: "Epic",
     price: "0.3 ETH",
     isEncrypted: true,
+    owner: "0x2345678901234567890123456789012345678901",
   },
   {
     id: "3",
@@ -35,6 +43,7 @@ const gameItems: GameItem[] = [
     rarity: "Rare",
     price: "0.15 ETH",
     isEncrypted: false,
+    owner: "0x3456789012345678901234567890123456789012",
   },
   {
     id: "4",
@@ -43,6 +52,7 @@ const gameItems: GameItem[] = [
     rarity: "Epic",
     price: "0.4 ETH",
     isEncrypted: true,
+    owner: "0x4567890123456789012345678901234567890123",
   },
   {
     id: "5",
@@ -51,6 +61,7 @@ const gameItems: GameItem[] = [
     rarity: "Legendary",
     price: "0.7 ETH", 
     isEncrypted: true,
+    owner: "0x5678901234567890123456789012345678901234",
   },
   {
     id: "6",
@@ -59,6 +70,7 @@ const gameItems: GameItem[] = [
     rarity: "Rare",
     price: "0.2 ETH",
     isEncrypted: false,
+    owner: "0x6789012345678901234567890123456789012345",
   },
 ];
 
@@ -73,9 +85,77 @@ const getRarityColor = (rarity: string) => {
 };
 
 const MarketplaceGrid = () => {
+  const { address } = useAccount();
+  const { purchaseAsset, isProcessing, isSuccess, error, hash } = useVeilTrade();
+  const [currentTransaction, setCurrentTransaction] = useState<{
+    assetName: string;
+    encryptedData?: any;
+  } | null>(null);
+
+  const handleBuyNow = async (item: GameItem) => {
+    if (!address) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
+    if (address.toLowerCase() === item.owner.toLowerCase()) {
+      toast.error('You cannot buy your own item');
+      return;
+    }
+
+    // Set current transaction for status display
+    setCurrentTransaction({
+      assetName: item.name,
+    });
+
+    // Convert GameItem to GameAsset format
+    const gameAsset: GameAsset = {
+      id: item.id,
+      name: item.name,
+      game: item.game,
+      rarity: item.rarity,
+      price: item.price,
+      priceInWei: BigInt(0), // Will be calculated in the hook
+      isEncrypted: item.isEncrypted,
+      owner: item.owner,
+      assetId: parseInt(item.id),
+    };
+
+    try {
+      await purchaseAsset(gameAsset);
+      
+      // Update transaction status with encrypted data
+      if (isSuccess) {
+        setCurrentTransaction(prev => ({
+          ...prev,
+          encryptedData: {
+            encryptedPrice: 'encrypted_price_data',
+            encryptedRarity: 'encrypted_rarity_data',
+            encryptedLevel: 'encrypted_level_data',
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Purchase failed:', error);
+    }
+  };
+
   return (
-    <section id="marketplace" className="py-20">
-      <div className="container mx-auto px-4">
+    <>
+      {/* Transaction Status Overlay */}
+      {currentTransaction && (
+        <TransactionStatus
+          isProcessing={isProcessing}
+          isSuccess={isSuccess}
+          error={error}
+          transactionHash={hash}
+          assetName={currentTransaction.assetName}
+          encryptedData={currentTransaction.encryptedData}
+        />
+      )}
+
+      <section id="marketplace" className="py-20">
+        <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="text-gradient-primary">Encrypted</span> Marketplace
@@ -140,9 +220,17 @@ const MarketplaceGrid = () => {
                 </div>
 
                 <div className="flex gap-2 pt-2">
-                  <Button className="btn-hero flex-1 text-sm py-2">
-                    <Zap className="h-4 w-4 mr-1" />
-                    Buy Now
+                  <Button 
+                    className="btn-hero flex-1 text-sm py-2"
+                    onClick={() => handleBuyNow(item)}
+                    disabled={isProcessing || address?.toLowerCase() === item.owner.toLowerCase()}
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Zap className="h-4 w-4 mr-1" />
+                    )}
+                    {isProcessing ? 'Processing...' : 'Buy Now'}
                   </Button>
                   <Button className="btn-secondary px-4 text-sm py-2">
                     <Eye className="h-4 w-4" />
@@ -160,6 +248,7 @@ const MarketplaceGrid = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 
