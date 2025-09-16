@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import { Card } from "@/components/ui/card";
-import { Shield, Lock, Eye, Zap, Server, Key } from "lucide-react";
+import { Lock, Eye, Zap, Server, Key, CheckCircle } from "lucide-react";
 
 const Privacy = () => {
   const features = [
@@ -15,7 +15,7 @@ const Privacy = () => {
       description: "Asset information remains obscured until transaction completion, preventing bots and competitors from tracking your trading patterns."
     },
     {
-      icon: <Shield className="h-8 w-8" />,
+      icon: <CheckCircle className="h-8 w-8" />,
       title: "Zero-Knowledge Proofs",
       description: "Verify transactions without revealing sensitive data. Trade with confidence while maintaining complete anonymity."
     },

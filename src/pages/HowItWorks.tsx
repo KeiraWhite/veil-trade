@@ -1,6 +1,6 @@
 import Header from "@/components/Header";
 import { Card } from "@/components/ui/card";
-import { Lock, Wallet, Zap, Eye, Shield, CheckCircle } from "lucide-react";
+import { Lock, Wallet, Zap, Eye, Key, CheckCircle } from "lucide-react";
 
 const HowItWorks = () => {
   const steps = [
@@ -25,7 +25,7 @@ const HowItWorks = () => {
       description: "Complete transactions instantly with smart contracts. Items are revealed only after successful payment."
     },
     {
-      icon: <Shield className="h-8 w-8" />,
+      icon: <Key className="h-8 w-8" />,
       title: "Secure Transfer",
       description: "Assets are transferred securely to your wallet with full encryption and ownership verification."
     },

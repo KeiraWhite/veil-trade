@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Eye, Zap, Plus } from "lucide-react";
+import { Lock, Eye, Zap, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-marketplace.jpg";
 
@@ -37,7 +37,7 @@ const HeroSection = () => {
           {/* Feature Pills */}
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm border border-border/50 rounded-full px-4 py-2">
-              <Shield className="h-4 w-4 text-primary" />
+              <Lock className="h-4 w-4 text-primary" />
               <span>Encrypted Trades</span>
             </div>
             <div className="flex items-center space-x-2 bg-card/50 backdrop-blur-sm border border-border/50 rounded-full px-4 py-2">
