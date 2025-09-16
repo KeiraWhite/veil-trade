@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Gaming Marketplace Design System - Dark Cyberpunk Theme */
+
+@layer base {
+  :root {
+    /* Core Gaming Colors */
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Gaming Purple Primary */
+    --primary: 270 75% 60%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 270 85% 70%;
+
+    /* Cyberpunk Cyan Secondary */
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 240 10% 3.9%;
+    --secondary-glow: 180 100% 60%;
+
+    /* Gaming UI */
+    --muted: 240 10% 12%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 270 75% 60%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 10% 15%;
+    --input: 240 10% 12%;
+    --ring: 270 75% 60%;
+
+    --radius: 0.75rem;
+
+    /* Gaming Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-glow)));
+    --gradient-dark: linear-gradient(135deg, hsl(240 10% 3.9%), hsl(240 15% 8%));
+    --gradient-glow: radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.3) 0%, transparent 70%);
+
+    /* Gaming Shadows */
+    --shadow-glow: 0 0 30px hsl(var(--primary) / 0.5);
+    --shadow-cyan: 0 0 30px hsl(var(--secondary) / 0.4);
+    --shadow-card: 0 10px 30px -10px hsl(240 10% 3.9% / 0.8);
+
+    /* Animation Variables */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background: var(--gradient-dark);
+  }
+}
+
+@layer components {
+  /* Gaming Button Variants */
+  .btn-hero {
+    @apply bg-gradient-to-r from-primary to-primary-glow text-primary-foreground px-8 py-4 rounded-lg font-bold uppercase tracking-wide transition-all duration-300 hover:scale-105;
+    box-shadow: 0 0 0 transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  }
+  
+  .btn-hero:hover {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.5);
+  }
+  
+  .btn-secondary {
+    @apply border-2 border-secondary text-secondary bg-transparent px-6 py-3 rounded-lg font-semibold uppercase tracking-wide transition-all duration-300 hover:bg-secondary hover:text-secondary-foreground;
+    box-shadow: 0 0 0 transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  }
+  
+  .btn-secondary:hover {
+    box-shadow: 0 0 30px hsl(var(--secondary) / 0.4);
+  }
+
+  /* Gaming Card Effects */
+  .card-encrypted {
+    @apply relative bg-card border border-border rounded-xl p-6 backdrop-blur-sm transition-all duration-300 hover:border-primary overflow-hidden;
+    box-shadow: 0 0 0 transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  }
+  
+  .card-encrypted:hover {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.3);
+  }
+  
+  .card-encrypted::before {
+    content: '';
+    @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
+    background: radial-gradient(circle at 50% 50%, hsl(var(--primary) / 0.3) 0%, transparent 70%);
+  }
+  
+  .card-encrypted:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Glowing Effects */
+  .glow-primary {
+    @apply drop-shadow-[0_0_20px_hsl(var(--primary)/0.5)];
+  }
+  
+  .glow-secondary {
+    @apply drop-shadow-[0_0_20px_hsl(var(--secondary)/0.4)];
+  }
+
+  /* Gaming Text Effects */
+  .text-gradient-primary {
+    @apply bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-secondary {
+    @apply bg-gradient-to-r from-secondary to-secondary-glow bg-clip-text text-transparent;
+  }
+
+  /* Mystery/Blur Effects */
+  .encrypted-blur {
+    @apply blur-sm transition-all duration-500 hover:blur-none;
+  }
+}
